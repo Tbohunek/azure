@@ -1,0 +1,21 @@
+# Compiled files
+*.tfstate
+*.tfstate.backup
+*.backup
+
+#log files
+*.log
+
+#lock files
+.terraform.lock.hcl
+
+# Module directory
+.terraform/
+
+# providers/backend/secrets
+secrets.tfvars
+secrets.auto.tfvars
+
+
+#IDE
+.vscode/
