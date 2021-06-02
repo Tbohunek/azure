@@ -9,7 +9,15 @@ It also deployes one simple container application.
 
 ## Requirements
 
-No requirements.
+This module expects that you already have some infrastructure, mainly that you are familiar with Terraform and Azure CLI, and you have `Owner` access to your subscription, and that you are member of the AD group specified in `var.cluster_admins_group_display_name`.
+
+To begin, log in to Azure CLI and select your subscription.
+```azcli
+az login
+az account set -s <subscriptionId>
+```
+
+Then run `terraform apply`. If you wish to integrate with your code, you also need to set up `backend`, else it will be persisted in your current directory.
 
 ## Providers
 
