@@ -8,6 +8,7 @@ Unlike the [Oritinal AKS module](../aks/README.md), this module deploys Azure Ku
 It also deployes one simple internal container application.
 
 This module is intended for scenarios with external Ingress Controller such as a centrally-managed Application Gateway.
+It is also because [AGIC is currently unsupported with Kubenet](https://github.com/Azure/application-gateway-kubernetes-ingress/issues/931) as Application Gateway subnet does not have kubenet routes. This will hopefully change soon!
 
 ## Requirements
 
