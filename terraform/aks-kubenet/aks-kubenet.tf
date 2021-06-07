@@ -241,7 +241,7 @@ resource "azurerm_container_registry" "acr" {
   location                 = azurerm_resource_group.cluster.location
   sku                      = "Standard"
   admin_enabled            = false  
-  georeplication_locations = ["West Europe", "North Europe"]
+  georeplication_locations = ["northeurope"]
 }
 
 resource "azurerm_role_assignment" "cluster_pull_from_acr" {
