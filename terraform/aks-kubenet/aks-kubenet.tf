@@ -107,6 +107,17 @@ resource "azurerm_subnet" "cluster" {
   resource_group_name  = azurerm_resource_group.cluster.name
   virtual_network_name = azurerm_virtual_network.cluster.name
   address_prefixes     = ["10.240.0.0/16"]
+  service_endpoints    = [  
+    "Microsoft.Storage",
+    "Microsoft.AzureCosmosDB",
+    "Microsoft.EventHub",
+    "Microsoft.KeyVault",
+    "Microsoft.Sql",
+    "Microsoft.ServiceBus",
+    "Microsoft.AzureActiveDirectory",
+    "Microsoft.ContainerRegistry",
+    "Microsoft.Web",
+  ]
 }
 
 resource "azurerm_route_table" "cluster" {
@@ -168,7 +179,12 @@ resource "azurerm_kubernetes_cluster" "cluster" {
     vm_size        = "Standard_D2_v2"
     vnet_subnet_id = azurerm_subnet.cluster.id
   }
-  addon_profile {}
+  addon_profile {
+    oms_agent {
+      enabled                    = true
+      log_analytics_workspace_id = azurerm_log_analytics_workspace.cluster.id
+    }
+  }
 
   identity {
     type = "UserAssigned"
@@ -195,6 +211,44 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   ]
 }
 
+# Cluster Monitoring
+
+resource "azurerm_log_analytics_workspace" "cluster" {
+  name                = var.name
+  location            = azurerm_resource_group.cluster.location
+  resource_group_name = azurerm_resource_group.cluster.name
+  sku                 = "PerGB2018"
+}
+
+resource "azurerm_log_analytics_solution" "cluster" {
+  solution_name         = "ContainerInsights"
+  location              = azurerm_resource_group.cluster.location
+  resource_group_name   = azurerm_resource_group.cluster.name
+  workspace_resource_id = azurerm_log_analytics_workspace.cluster.id
+  workspace_name        = azurerm_log_analytics_workspace.cluster.name
+
+  plan {
+    publisher = "Microsoft"
+    product   = "OMSGallery/ContainerInsights"
+  }
+}
+
+# Container Registry
+
+resource "azurerm_container_registry" "acr" {
+  name                     = var.name
+  resource_group_name      = azurerm_resource_group.cluster.name
+  location                 = azurerm_resource_group.cluster.location
+  sku                      = "Standard"
+  admin_enabled            = false  
+  georeplication_locations = ["northeurope"]
+}
+
+resource "azurerm_role_assignment" "cluster_pull_from_acr" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id
+}
 
 # Container Application deployment
 
