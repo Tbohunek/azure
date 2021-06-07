@@ -168,7 +168,12 @@ resource "azurerm_kubernetes_cluster" "cluster" {
     vm_size        = "Standard_D2_v2"
     vnet_subnet_id = azurerm_subnet.cluster.id
   }
-  addon_profile {}
+  addon_profile {
+    oms_agent {
+      enabled                    = true
+      log_analytics_workspace_id = azurerm_log_analytics_workspace.cluster.id
+    }
+  }
 
   identity {
     type = "UserAssigned"
@@ -195,6 +200,27 @@ resource "azurerm_kubernetes_cluster" "cluster" {
   ]
 }
 
+# Cluster Monitoring
+
+resource "azurerm_log_analytics_workspace" "cluster" {
+  name                = var.name
+  location            = azurerm_resource_group.cluster.location
+  resource_group_name = azurerm_resource_group.cluster.name
+  sku                 = "PerGB2018"
+}
+
+resource "azurerm_log_analytics_solution" "cluster" {
+  solution_name         = "ContainerInsights"
+  location              = azurerm_resource_group.cluster.location
+  resource_group_name   = azurerm_resource_group.cluster.name
+  workspace_resource_id = azurerm_log_analytics_workspace.cluster.id
+  workspace_name        = azurerm_log_analytics_workspace.cluster.name
+
+  plan {
+    publisher = "Microsoft"
+    product   = "OMSGallery/ContainerInsights"
+  }
+}
 
 # Container Application deployment
 
