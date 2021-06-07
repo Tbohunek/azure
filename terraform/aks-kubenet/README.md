@@ -4,6 +4,8 @@ Unlike the [Oritinal AKS module](../aks/README.md), this module deploys Azure Ku
 - enabled RBAC and Azure AD integration
 - managed identities
 - kubenet network plugin
+- cluster monitoring
+- Container Registry
 
 It also deployes one simple internal container application.
 
