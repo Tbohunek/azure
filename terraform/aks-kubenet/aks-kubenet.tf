@@ -107,6 +107,17 @@ resource "azurerm_subnet" "cluster" {
   resource_group_name  = azurerm_resource_group.cluster.name
   virtual_network_name = azurerm_virtual_network.cluster.name
   address_prefixes     = ["10.240.0.0/16"]
+  service_endpoints    = [  
+    "Microsoft.Storage",
+    "Microsoft.AzureCosmosDB",
+    "Microsoft.EventHub",
+    "Microsoft.KeyVault",
+    "Microsoft.Sql",
+    "Microsoft.ServiceBus",
+    "Microsoft.AzureActiveDirectory",
+    "Microsoft.ContainerRegistry",
+    "Microsoft.Web",
+  ]
 }
 
 resource "azurerm_route_table" "cluster" {
