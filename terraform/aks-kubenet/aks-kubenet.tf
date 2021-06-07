@@ -222,6 +222,23 @@ resource "azurerm_log_analytics_solution" "cluster" {
   }
 }
 
+# Container Registry
+
+resource "azurerm_container_registry" "acr" {
+  name                     = var.name
+  resource_group_name      = azurerm_resource_group.cluster.name
+  location                 = azurerm_resource_group.cluster.location
+  sku                      = "Standard"
+  admin_enabled            = false  
+  georeplication_locations = ["West Europe", "North Europe"]
+}
+
+resource "azurerm_role_assignment" "cluster_pull_from_acr" {
+  scope                = azurerm_container_registry.acr.id
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.cluster.kubelet_identity[0].object_id
+}
+
 # Container Application deployment
 
 resource "kubernetes_namespace" "dev" {
