@@ -1,5 +1,5 @@
 # Azure Kubernetes Cluster
-Unlike the [Oritinal AKS module](../aks/README.md), this module deploys Azure Kubernetes cluster with following features:
+Unlike the [Original AKS module](../aks/README.md), this module deploys Azure Kubernetes cluster with following features:
 - bring your own Virtual Network and Route table
 - enabled RBAC and Azure AD integration
 - managed identities
