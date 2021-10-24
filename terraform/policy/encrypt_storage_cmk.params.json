@@ -1,0 +1,53 @@
+{
+    "keyName": {
+        "type": "String",
+        "metadata": {
+            "displayName": "Key Name",
+            "description": "Encryption Key name"
+        }
+    },
+    "keyVersion": {
+        "type": "String",
+        "metadata": {
+            "displayName": "Key Version",
+            "description": "Encryption Key version - leave blank for auto-rotation to latest version"
+        },
+        "defaultValue": ""
+    },
+    "vaultName": {
+        "type": "String",
+        "metadata": {
+            "displayName": "Vault Name",
+            "description": "Name of Key Vault with encryption Key"
+        }
+    },
+    "vaultResourceGroup": {
+        "type": "String",
+        "metadata": {
+            "displayName": "Vault Resource Grpup Name",
+            "description": "Name of Resource Group of Key Vault with encryption Key"
+        },
+        "defaultValue": ""
+    },
+    "location": {
+        "type": "String",
+        "metadata": {
+            "displayName": "Resource Location",
+            "description": "Resource Location must be the same as the Key Vault",
+            "strongType": "location"
+        }
+    },
+    "effect": {
+        "type": "String",
+        "metadata": {
+            "displayName": "Policy effect",
+            "description": "Policy effect - disabled or deployIfNotExists"
+        },
+        "allowedValues": [
+            "disabled",
+            "audit",
+            "deployIfNotExists"
+        ],
+        "defaultValue": "disabled"
+    }
+}

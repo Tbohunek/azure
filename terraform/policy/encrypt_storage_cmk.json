@@ -1,0 +1,249 @@
+{
+    "if": {
+        "allOf": [
+            {
+                "field": "type",
+                "equals": "Microsoft.Storage/storageAccounts"
+            },
+            {
+                "field": "location",
+                "equals": "[parameters('location')]"
+            }
+        ]
+    },
+    "then": {
+        "effect": "[parameters('effect')]",
+        "details": {
+            "type": "Microsoft.Storage/storageAccounts",
+            "name": "[field('name')]",
+            "existenceCondition": {
+                "allOf": [
+                    {
+                        "field": "Microsoft.Storage/storageAccounts/encryption.keySource",
+                        "equals": "Microsoft.Keyvault"
+                    },
+                    {
+                        "field": "Microsoft.Storage/storageAccounts/encryption.keyVaultProperties.keyVersion",
+                        "equals": "[parameters('keyVersion')]"
+                    }
+                ]
+            },
+            "roleDefinitionIds": [
+                "/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+                "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+            ],
+            "deployment": {
+                "properties": {
+                    "mode": "incremental",
+                    "parameters": {
+                        "keyName": {
+                            "value": "[parameters('keyName')]"
+                        },
+                        "keyVersion": {
+                            "value": "[parameters('keyVersion')]"
+                        },
+                        "vaultName": {
+                            "value": "[parameters('vaultName')]"
+                        },
+                        "vaultResourceGroup": {
+                            "value": "[parameters('vaultResourceGroup')]"
+                        },
+                        "accountName": {
+                            "value": "[field('name')]"
+                        }
+                    },
+                    "template": {
+                        "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                        "contentVersion": "1.0.0.0",
+                        "parameters": {
+                            "keyName": {
+                                "type": "string"
+                            },
+                            "keyVersion": {
+                                "type": "string"
+                            },
+                            "vaultName": {
+                                "type": "String"
+                            },
+                            "vaultResourceGroup": {
+                                "type": "String"
+                            },
+                            "location": {
+                                "type": "string",
+                                "defaultValue": "[resourceGroup().location]"
+                            },
+                            "accountName": {
+                                "type": "string"
+                            }
+                        },
+                        "variables": {},
+                        "resources": [
+                            {
+                                "type": "Microsoft.Storage/storageAccounts",
+                                "name": "[parameters('accountName')]",
+                                "apiVersion": "2019-06-01",
+                                "location": "[parameters('location')]",
+                                "identity": {
+                                    "type": "SystemAssigned"
+                                },
+                                "dependsOn": []
+                            },
+                            {
+                                "type": "Microsoft.Resources/deployments",
+                                "apiVersion": "2019-07-01",
+                                "name": "[concat('createVaultAccessPolicy_', parameters('accountName'))]",
+                                "resourceGroup": "[parameters('vaultResourceGroup')]",
+                                "dependsOn": [
+                                    "[resourceId('Microsoft.Storage/storageAccounts', parameters('accountName'))]"
+                                ],
+                                "properties": {
+                                    "mode": "Incremental",
+                                    "parameters": {
+                                        "vaultName": {
+                                            "value": "[parameters('vaultName')]"
+                                        },
+                                        "vaultResourceGroup": {
+                                            "value": "[parameters('vaultResourceGroup')]"
+                                        },
+                                        "accountName": {
+                                            "value": "[parameters('accountName')]"
+                                        }
+                                    },
+                                    "template": {
+                                        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                                        "contentVersion": "0.1.0.0",
+                                        "parameters": {
+                                            "vaultName": {
+                                                "type": "String"
+                                            },
+                                            "vaultResourceGroup": {
+                                                "type": "String"
+                                            },
+                                            "accountName": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.KeyVault/vaults/accessPolicies",
+                                                "name": "[concat(parameters('vaultName'), '/add')]",
+                                                "apiVersion": "2019-09-01",
+                                                "properties": {
+                                                    "accessPolicies": [
+                                                        {
+                                                            "tenantId": "[subscription().tenantid]",
+                                                            "objectId": "[reference(resourceId('Microsoft.Storage/storageAccounts',  parameters('accountName')),'2019-06-01', 'full').identity.principalId]",
+                                                            "permissions": {
+                                                                "keys": [
+                                                                    "wrapkey",
+                                                                    "unwrapkey",
+                                                                    "get"
+                                                                ],
+                                                                "secrets": [],
+                                                                "certificates": []
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            {
+                                                "type": "Microsoft.Authorization/roleAssignments",
+                                                "apiVersion": "2020-04-01-preview",
+                                                "name": "[guid(resourceId('Microsoft.Storage/storageAccounts', parameters('accountName')))]",
+                                                "scope": "[resourceId(subscription().subscriptionId, parameters('vaultResourceGroup'),'Microsoft.KeyVault/vaults',parameters('vaultName'))]",
+                                                "properties": {
+                                                    "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'e147488a-f6f5-4113-8e2d-b22465e65bf6')]",
+                                                    "principalId": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('accountName')),'2019-06-01', 'full').identity.principalId]"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                "type": "Microsoft.Resources/deployments",
+                                "apiVersion": "2019-07-01",
+                                "name": "[concat('enableStorageEncryption_', parameters('accountName'))]",
+                                "dependsOn": [
+                                    "[resourceId('Microsoft.Storage/storageAccounts', parameters('accountName'))]"
+                                ],
+                                "properties": {
+                                    "mode": "Incremental",
+                                    "parameters": {
+                                        "keyName": {
+                                            "value": "[parameters('keyName')]"
+                                        },
+                                        "keyVersion": {
+                                            "value": "[parameters('keyVersion')]"
+                                        },
+                                        "vaultName": {
+                                            "value": "[parameters('vaultName')]"
+                                        },
+                                        "vaultResourceGroup": {
+                                            "value": "[parameters('vaultResourceGroup')]"
+                                        },
+                                        "accountName": {
+                                            "value": "[parameters('accountName')]"
+                                        }
+                                    },
+                                    "template": {
+                                        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                                        "contentVersion": "0.1.0.0",
+                                        "parameters": {
+                                            "keyName": {
+                                                "type": "string"
+                                            },
+                                            "keyVersion": {
+                                                "type": "string"
+                                            },
+                                            "vaultName": {
+                                                "type": "String"
+                                            },
+                                            "vaultResourceGroup": {
+                                                "type": "String"
+                                            },
+                                            "location": {
+                                                "type": "string",
+                                                "defaultValue": "[resourceGroup().location]"
+                                            },
+                                            "accountName": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.Storage/storageAccounts",
+                                                "name": "[parameters('accountName')]",
+                                                "apiVersion": "2019-06-01",
+                                                "location": "[parameters('location')]",
+                                                "properties": {
+                                                    "encryption": {
+                                                        "services": {
+                                                            "file": {
+                                                                "enabled": true
+                                                            },
+                                                            "blob": {
+                                                                "enabled": true
+                                                            }
+                                                        },
+                                                        "keySource": "Microsoft.Keyvault",
+                                                        "keyvaultproperties": {
+                                                            "keyvaulturi": "[reference(resourceId(subscription().subscriptionId,parameters('vaultResourceGroup'),'Microsoft.KeyVault/vaults',parameters('vaultName')),'2016-10-01', 'full').properties.vaultUri]",
+                                                            "keyname": "[parameters('keyName')]",
+                                                            "keyversion": "[parameters('keyversion')]"
+                                                        }
+                                                    }
+                                                },
+                                                "dependsOn": []
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
