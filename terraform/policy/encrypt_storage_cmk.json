@@ -8,6 +8,10 @@
             {
                 "field": "location",
                 "equals": "[parameters('location')]"
+            },
+            {
+                "field": "name",
+                "notLike": "*azscripts"
             }
         ]
     },
@@ -91,10 +95,58 @@
                             {
                                 "type": "Microsoft.Resources/deployments",
                                 "apiVersion": "2019-07-01",
-                                "name": "[concat('createVaultAccessPolicy_', parameters('accountName'))]",
+                                "name": "[concat('waitForIdentityScript_', parameters('accountName'))]",
                                 "resourceGroup": "[parameters('vaultResourceGroup')]",
                                 "dependsOn": [
                                     "[resourceId('Microsoft.Storage/storageAccounts', parameters('accountName'))]"
+                                ],
+                                "properties": {
+                                    "mode": "Incremental",
+                                    "parameters": {
+                                        "accountName": {
+                                            "value": "[parameters('accountName')]"
+                                        },
+                                        "location": {
+                                            "value": "[parameters('location')]"
+                                        }
+                                    },
+                                    "template": {
+                                        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                                        "contentVersion": "0.1.0.0",
+                                        "parameters": {
+                                            "accountName": {
+                                                "type": "string"
+                                            },
+                                            "location": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "resources": [
+                                            {
+                                                "type": "Microsoft.Resources/deploymentScripts",
+                                                "apiVersion": "2020-10-01",
+                                                "kind": "AzurePowerShell",
+                                                "name": "[concat('waitForIdentity_', parameters('accountName'))]",
+                                                "location": "[parameters('location')]",
+                                                "dependsOn": [],
+                                                "properties": {
+                                                    "azPowerShellVersion": "3.0",
+                                                    "scriptContent": "start-sleep -Seconds 30",
+                                                    "cleanupPreference": "Always",
+                                                    "retentionInterval": "PT1H"
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            },
+                            {
+                                "type": "Microsoft.Resources/deployments",
+                                "apiVersion": "2019-07-01",
+                                "name": "[concat('createVaultAccessPolicy_', parameters('accountName'))]",
+                                "resourceGroup": "[parameters('vaultResourceGroup')]",
+                                "dependsOn": [
+                                    "[concat('waitForIdentityScript_', parameters('accountName'))]"
                                 ],
                                 "properties": {
                                     "mode": "Incremental",
@@ -165,7 +217,7 @@
                                 "apiVersion": "2019-07-01",
                                 "name": "[concat('enableStorageEncryption_', parameters('accountName'))]",
                                 "dependsOn": [
-                                    "[resourceId('Microsoft.Storage/storageAccounts', parameters('accountName'))]"
+                                    "[concat('createVaultAccessPolicy_', parameters('accountName'))]"
                                 ],
                                 "properties": {
                                     "mode": "Incremental",
