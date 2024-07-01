@@ -6,9 +6,9 @@ Demand overflow on Amsterdam and Dublin regions forced Microsoft to implement ha
 This humble script will print a nice table of desired regions...
 
 ``` ps1
-$subscriptions = Get-AzSubscription -TenantId  e00ddcdf-1e0f-4be5-a37a-894a4731986a | ? {$_.name -like "S*"} | sort-object Name
+$subscriptions = Get-AzSubscription -TenantId  ttt | ? {$_.name -like "S*"} | sort-object Name
 
-$sku = "Standard_D2s_v5"
+$sku = "Standard_D2s_v5" # Most accurate sample
 $locations = @( "westeurope", "northeurope", "italynorth" )
 
 $results = @()
@@ -39,4 +39,4 @@ $results | Format-Table -AutoSize
 
 ![alt text](image-1.png)
 
-Empty means Zonal no restrictions
+Listed Zones cannot be used. Empty means Zonal no restrictions
