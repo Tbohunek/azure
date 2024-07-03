@@ -49,7 +49,7 @@ foreach ($subscription in $subscriptions) {
     set-azcontext -SubscriptionId $subscription.Id
     
     foreach ($location in $locations) {
-        $quotas = get-azvmusage -location westeurope | ? {$_.limit -gt 0 -and $_.CurrentValue -gt 0}
+        $quotas = get-azvmusage -location $location | ? {$_.limit -gt 0 -and $_.CurrentValue -gt 0}
 
         foreach ($quota in $quotas) {
             $quotaperc = [math]::Round($quota.CurrentValue / $quota.Limit *100, 0)
